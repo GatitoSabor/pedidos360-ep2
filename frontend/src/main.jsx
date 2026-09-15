@@ -4,10 +4,9 @@ import App from './App.jsx'
 import './index.css'
 import { AuthProvider } from "react-oidc-context";
 
-// Configuración exacta apuntando a tu infraestructura en AWS
 const cognitoAuthConfig = {
-  authority: "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_m879HhW7X", // Tu nuevo Pool
-  client_id: "447j950qjs67rugncbkoagkgse", // Tu nuevo Client ID
+  authority: "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_m879HhW7X", 
+  client_id: "447j950qjs67rugncbkoagkgse", 
   redirect_uri: "http://localhost:4200/",
   response_type: "code",
   scope: "email openid profile",

@@ -4,7 +4,7 @@ on:
   push:
     paths:
       - 'backend/**'
-      - '.github/workflows/back-build.yml' # Agregado para que detecte este mismo cambio
+      - '.github/workflows/back-build.yml' 
 
 jobs:
   build:

@@ -1,7 +1,7 @@
 name: 2. Frontend Deploy Pipeline
 
 on:
-  workflow_dispatch: # Permite ejecutar el pipeline manualmente desde GitHub
+  workflow_dispatch: 
 
 jobs:
   deploy:

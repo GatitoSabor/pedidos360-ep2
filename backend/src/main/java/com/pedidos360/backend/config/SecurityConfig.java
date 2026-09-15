@@ -25,7 +25,6 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .anyRequest().authenticated()
             )
-            // Conectamos el traductor de roles aquí:
             .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> 
                 jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())
             ));
@@ -33,14 +32,11 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // ==========================================
-    // TRADUCTOR: Convierte cognito:groups a Roles
-    // ==========================================
     @Bean
     public JwtAuthenticationConverter jwtAuthenticationConverter() {
         JwtGrantedAuthoritiesConverter converter = new JwtGrantedAuthoritiesConverter();
         converter.setAuthoritiesClaimName("cognito:groups"); 
-        converter.setAuthorityPrefix("ROLE_"); // Spring Security usa este prefijo por convención
+        converter.setAuthorityPrefix("ROLE_"); 
 
         JwtAuthenticationConverter jwtConverter = new JwtAuthenticationConverter();
         jwtConverter.setJwtGrantedAuthoritiesConverter(converter);

@@ -8,8 +8,14 @@ function App() {
   const [errorApi, setErrorApi] = useState("");
   
   const [descripcion, setDescripcion] = useState("");
-  const [montoTotal, setMontoTotal] = useState("");
+  const [fechaInicio, setFechaInicio] = useState("");
+  const [fechaTermino, setFechaTermino] = useState("");
   const [comentarios, setComentarios] = useState({});
+
+  const [editandoId, setEditandoId] = useState(null);
+  const [editDescripcion, setEditDescripcion] = useState("");
+  const [editInicio, setEditInicio] = useState("");
+  const [editTermino, setEditTermino] = useState("");
 
   const obtenerRoles = () => {
     if (!auth.user?.access_token) return { isSolicitante: false, isAprobador: false };
@@ -19,11 +25,11 @@ function App() {
       if (typeof groups === 'string') groups = [groups];
 
       return {
-        isSolicitante: groups.includes('solicitante') || payload.sub, // Fallback temporal para pruebas
-        isAprobador: groups.includes('aprobador') || payload.sub
+        isSolicitante: groups.includes('solicitante'),
+        isAprobador: groups.includes('aprobador')
       };
     } catch (e) {
-      return { isSolicitante: true, isAprobador: true }; // Si falla el decode, abrimos vistas para evitar bloqueos visuales
+      return { isSolicitante: false, isAprobador: false };
     }
   };
 
@@ -39,10 +45,10 @@ function App() {
         const data = await respuesta.json();
         setPedidos(data);
       } else {
-        setErrorApi(`Error al cargar: ${respuesta.status} - ${respuesta.statusText}`);
+        setErrorApi(`Error al cargar: ${respuesta.status}`);
       }
     } catch (error) {
-      setErrorApi("No se pudo conectar con el backend en http://localhost:8080");
+      setErrorApi("No se pudo conectar con el backend.");
     }
   };
 
@@ -61,11 +67,16 @@ function App() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${auth.user?.access_token}` 
         },
-        body: JSON.stringify({ descripcion, montoTotal: parseFloat(montoTotal) || 0 })
+        body: JSON.stringify({ 
+          descripcion, 
+          fechaInicio: fechaInicio || null, 
+          fechaTermino: fechaTermino || null 
+        })
       });
       if (respuesta.ok) {
         setDescripcion("");
-        setMontoTotal("");
+        setFechaInicio("");
+        setFechaTermino("");
         cargarPedidos();
       }
     } catch (error) {
@@ -93,109 +104,198 @@ function App() {
     }
   };
 
-  const handleComentarioChange = (id, valor) => {
-    setComentarios({ ...comentarios, [id]: valor });
+  const eliminarPedido = async (id) => {
+    if (!window.confirm("¿Estás seguro de eliminar esta solicitud?")) return;
+    try {
+      const respuesta = await fetch(`http://localhost:8080/api/datos/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${auth.user?.access_token}` }
+      });
+      if (respuesta.ok) {
+        cargarPedidos();
+      }
+    } catch (error) {
+      console.error("Error al eliminar:", error);
+    }
   };
 
-  if (auth.isLoading) return <div>Cargando estado de seguridad...</div>;
-  if (auth.error) return <div>Error de autenticación: {auth.error.message}</div>;
+  const guardarEdicion = async (id) => {
+    try {
+      const respuesta = await fetch(`http://localhost:8080/api/datos/${id}`, {
+        method: "PUT",
+        headers: { 
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${auth.user?.access_token}` 
+        },
+        body: JSON.stringify({ 
+          descripcion: editDescripcion, 
+          fechaInicio: editInicio || null, 
+          fechaTermino: editTermino || null 
+        })
+      });
+      if (respuesta.ok) {
+        setEditandoId(null);
+        cargarPedidos();
+      }
+    } catch (error) {
+      console.error("Error al editar:", error);
+    }
+  };
+
+  if (auth.isLoading) return <div className="loader">Cargando entorno seguro...</div>;
+  if (auth.error) return <div className="error-msg">Error de autenticación: {auth.error.message}</div>;
 
   if (auth.isAuthenticated) {
     return (
-      <div className="card" style={{ maxWidth: '800px', margin: '0 auto', textAlign: 'left' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2>Portal Corporativo</h2>
-          <button onClick={() => auth.signoutRedirect()} style={{ backgroundColor: '#dc3545', color: 'white' }}>
-            Cerrar Sesión
-          </button>
-        </div>
-        <p>Usuario: <strong>{auth.user?.profile.email}</strong></p>
-        <hr />
-
-        {errorApi && (
-          <div style={{ padding: '10px', backgroundColor: '#f8d7da', color: '#721c24', marginBottom: '15px', borderRadius: '5px' }}>
-            {errorApi}
+      <div className="app-container">
+        <header className="app-header">
+          <div>
+            <h2 className="app-title">🏢 Pedidos360</h2>
+            <p className="app-subtitle">Portal Corporativo de Gestión y Aprobaciones</p>
           </div>
-        )}
+          <div className="user-box">
+            <span className="user-email">{auth.user?.profile.email}</span>
+            <button onClick={() => auth.signoutRedirect()} className="btn-logout">
+              Cerrar Sesión
+            </button>
+          </div>
+        </header>
 
-        {isSolicitante && (
-          <div style={{ marginBottom: '30px', padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
-            <h3>Ingresar Nueva Solicitud</h3>
-            <form onSubmit={crearPedido} style={{ display: 'flex', gap: '10px' }}>
+        {errorApi && <div className="alert-error">{errorApi}</div>}
+
+        {/* Solo el rol solicitante puede crear peticiones */}
+        {isSolicitante && !isAprobador && (
+          <section className="section-card">
+            <h3 className="section-title">📅 Ingresar Solicitud de Vacaciones o Días Administrativos</h3>
+            <form onSubmit={crearPedido} className="form-grid">
               <input 
-                type="text" placeholder="Ej: Solicitar vacaciones" required
+                type="text" placeholder="Motivo (Ej: Vacaciones de Verano)" required
                 value={descripcion} onChange={(e) => setDescripcion(e.target.value)}
+                className="input-field"
               />
-              <input 
-                type="number" placeholder="Monto (Opcional)"
-                value={montoTotal} onChange={(e) => setMontoTotal(e.target.value)}
-              />
-              <button type="submit" style={{ backgroundColor: '#28a745', color: 'white' }}>Crear</button>
+              <div style={{ display: 'flex', gap: '5px', flex: 1 }}>
+                <input 
+                  type="date" title="Fecha Inicio" required
+                  value={fechaInicio} onChange={(e) => setFechaInicio(e.target.value)}
+                  className="input-field"
+                />
+                <input 
+                  type="date" title="Fecha Término" required
+                  value={fechaTermino} onChange={(e) => setFechaTermino(e.target.value)}
+                  className="input-field"
+                />
+              </div>
+              <button type="submit" className="btn-primary">Crear Solicitud</button>
             </form>
-          </div>
+          </section>
         )}
 
-        <h3>Estado de Solicitudes</h3>
-        <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '10px' }}>
-          <thead>
-            <tr style={{ borderBottom: '2px solid #ccc' }}>
-              <th>ID</th>
-              <th>Descripción</th>
-              <th>Estado</th>
-              {isAprobador && <th>Acción de Jefatura</th>}
-            </tr>
-          </thead>
-          <tbody>
-            {pedidos.map((p) => (
-              <tr key={p.id} style={{ borderBottom: '1px solid #eee' }}>
-                <td style={{ padding: '10px 0' }}>#{p.id}</td>
-                <td>{p.descripcion}</td>
-                <td>
-                  <strong style={{ 
-                    color: p.estado === 'PENDIENTE' ? '#ffc107' : p.estado === 'APROBADO' ? '#28a745' : '#dc3545' 
-                  }}>
-                    {p.estado}
-                  </strong>
-                  {p.comentarioAprobador && <div style={{ fontSize: '0.8em', color: '#666' }}>Nota: {p.comentarioAprobador}</div>}
-                </td>
-                
-                {isAprobador && (
-                  <td>
-                    {p.estado === 'PENDIENTE' ? (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+        <section className="section-card">
+          <h3 className="section-title">📋 Estado General de Solicitudes</h3>
+          <div className="table-container">
+            <table className="styled-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Descripción</th>
+                  <th>Período (Desde - Hasta)</th>
+                  <th>Estado</th>
+                  <th>Acciones / Gestión</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pedidos.map((p) => (
+                  <tr key={p.id}>
+                    <td>#{p.id}</td>
+                    <td>
+                      {editandoId === p.id ? (
                         <input 
-                          type="text" placeholder="Comentario (opcional)" 
-                          value={comentarios[p.id] || ""} 
-                          onChange={(e) => handleComentarioChange(p.id, e.target.value)}
+                          type="text" value={editDescripcion} 
+                          onChange={(e) => setEditDescripcion(e.target.value)}
+                          className="input-small"
                         />
-                        <div style={{ display: 'flex', gap: '5px' }}>
-                          <button onClick={() => revisarPedido(p.id, 'APROBADO')} style={{ backgroundColor: '#007bff', color: 'white', padding: '5px' }}>Aprobar</button>
-                          <button onClick={() => revisarPedido(p.id, 'RECHAZADO')} style={{ backgroundColor: '#dc3545', color: 'white', padding: '5px' }}>Rechazar</button>
+                      ) : (
+                        p.descripcion
+                      )}
+                    </td>
+                    <td>
+                      {editandoId === p.id ? (
+                        <div style={{display:'flex', gap:'4px'}}>
+                          <input type="date" value={editInicio} onChange={(e) => setEditInicio(e.target.value)} className="input-small" />
+                          <input type="date" value={editTermino} onChange={(e) => setEditTermino(e.target.value)} className="input-small" />
                         </div>
+                      ) : (
+                        `${p.fechaInicio || 'N/A'} al ${p.fechaTermino || 'N/A'}`
+                      )}
+                    </td>
+                    <td>
+                      <span className={`badge ${
+                        p.estado === 'PENDIENTE' ? 'badge-pendiente' : p.estado === 'APROBADO' ? 'badge-aprobado' : 'badge-rechazado'
+                      }`}>
+                        {p.estado}
+                      </span>
+                      {p.comentarioAprobador && <div className="nota">Nota: {p.comentarioAprobador}</div>}
+                    </td>
+                    <td>
+                      <div className="action-group">
+                        {/* Acciones de Jefatura para el Aprobador */}
+                        {isAprobador && p.estado === 'PENDIENTE' && (
+                          <div className="aprobador-box">
+                            <input 
+                              type="text" placeholder="Comentario opcional" 
+                              value={comentarios[p.id] || ""} 
+                              onChange={(e) => setComentarios({ ...comentarios, [p.id]: e.target.value })}
+                              className="input-small"
+                            />
+                            <div className="btn-row">
+                              <button onClick={() => revisarPedido(p.id, 'APROBADO')} className="btn-approve">Aprobar</button>
+                              <button onClick={() => revisarPedido(p.id, 'RECHAZADO')} className="btn-reject">Rechazar</button>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Controles CRUD para el Solicitante */}
+                        {isSolicitante && p.estado === 'PENDIENTE' && (
+                          <div className="btn-row">
+                            {editandoId === p.id ? (
+                              <>
+                                <button onClick={() => guardarEdicion(p.id)} className="btn-save">Guardar</button>
+                                <button onClick={() => setEditandoId(null)} className="btn-cancel">Cancelar</button>
+                              </>
+                            ) : (
+                              <>
+                                <button onClick={() => { setEditandoId(p.id); setEditDescripcion(p.descripcion); setEditInicio(p.fechaInicio); setEditTermino(p.fechaTermino); }} className="btn-edit">Editar</button>
+                                <button onClick={() => eliminarPedido(p.id)} className="btn-delete">Eliminar</button>
+                              </>
+                            )}
+                          </div>
+                        )}
+
+                        {p.estado !== 'PENDIENTE' && <span className="text-muted">Finalizado</span>}
                       </div>
-                    ) : (
-                      <span style={{ fontSize: '0.9em', color: '#999' }}>Revisado</span>
-                    )}
-                  </td>
+                    </td>
+                  </tr>
+                ))}
+                {pedidos.length === 0 && (
+                  <tr><td colSpan="5" className="no-data">No hay solicitudes registradas en el sistema.</td></tr>
                 )}
-              </tr>
-            ))}
-            {pedidos.length === 0 && (
-              <tr><td colSpan="4" style={{ textAlign: 'center', padding: '20px' }}>No hay solicitudes registradas.</td></tr>
-            )}
-          </tbody>
-        </table>
+              </tbody>
+            </table>
+          </div>
+        </section>
       </div>
     );
   }
 
   return (
-    <div>
-      <h1>Pedidos360</h1>
-      <p>Sistema de Flujo de Aprobaciones corporativo.</p>
-      <button onClick={() => auth.signinRedirect()}>
-        Iniciar Sesión Seguro
-      </button>
+    <div className="login-container">
+      <div className="login-card">
+        <h1 className="login-title">Pedidos360</h1>
+        <p className="login-text">Plataforma Cloud-Native de Gestión y Aprobaciones Corporativas.</p>
+        <button onClick={() => auth.signinRedirect()} className="btn-login-big">
+          Iniciar Sesión en el Portal
+        </button>
+      </div>
     </div>
   );
 }

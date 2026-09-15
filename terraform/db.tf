@@ -1,4 +1,3 @@
-# 1. Grupo de Seguridad para permitir conexión a la base de datos
 resource "aws_security_group" "db_sg" {
   name        = "pedidos360_db_sg"
   description = "Permitir trafico a PostgreSQL"
@@ -18,7 +17,6 @@ resource "aws_security_group" "db_sg" {
   }
 }
 
-# 2. Instancia RDS de PostgreSQL
 resource "aws_db_instance" "postgres" {
   identifier             = "pedidos360-db"
   engine                 = "postgres"
@@ -32,7 +30,6 @@ resource "aws_db_instance" "postgres" {
   vpc_security_group_ids = [aws_security_group.db_sg.id]
 }
 
-# 3. Imprimir la URL de conexión al terminar
 output "db_endpoint" {
   value = aws_db_instance.postgres.endpoint
 }

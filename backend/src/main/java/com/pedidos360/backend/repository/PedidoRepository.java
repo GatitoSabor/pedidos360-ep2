@@ -6,5 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface PedidoRepository extends JpaRepository<Pedido, Long> {
-    // Spring Data JPA crea las consultas SQL por debajo automáticamente
+  
 }
