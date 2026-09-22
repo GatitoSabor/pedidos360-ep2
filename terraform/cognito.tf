@@ -67,8 +67,8 @@ resource "aws_cognito_user_pool_client" "spa" {
     "pedidos/api.delete"
   ]
 
-  callback_urls = ["http://localhost:5173/"]  
-  logout_urls   = ["http://localhost:5173/"]
+  callback_urls = ["http://localhost:4200/"]  
+  logout_urls   = ["http://localhost:4200/"]
 
   explicit_auth_flows   = ["ALLOW_USER_PASSWORD_AUTH", "ALLOW_REFRESH_TOKEN_AUTH"]
   access_token_validity = 60

@@ -38,7 +38,7 @@ function App() {
   const cargarPedidos = async () => {
     try {
       setErrorApi("");
-      const respuesta = await fetch("http://localhost:8080/api/datos", {
+      const respuesta = await fetch(`${import.meta.env.VITE_API_URL}/api/pedidos/datos`, {
         headers: { Authorization: `Bearer ${auth.user?.access_token}` }
       });
       if (respuesta.ok) {
@@ -61,7 +61,7 @@ function App() {
   const crearPedido = async (e) => {
     e.preventDefault();
     try {
-      const respuesta = await fetch("http://localhost:8080/api/datos", {
+      const respuesta = await fetch(`${import.meta.env.VITE_API_URL}/api/pedidos/datos`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
@@ -87,7 +87,7 @@ function App() {
   const revisarPedido = async (id, estado) => {
     const comentario = comentarios[id] || "";
     try {
-      const respuesta = await fetch(`http://localhost:8080/api/datos/${id}/revision`, {
+      const respuesta = await fetch(`${import.meta.env.VITE_API_URL}/api/pedidos/datos/${id}/revision`, {
         method: "PATCH",
         headers: { 
           "Content-Type": "application/json",
@@ -107,7 +107,7 @@ function App() {
   const eliminarPedido = async (id) => {
     if (!window.confirm("¿Estás seguro de eliminar esta solicitud?")) return;
     try {
-      const respuesta = await fetch(`http://localhost:8080/api/datos/${id}`, {
+      const respuesta = await fetch(`${import.meta.env.VITE_API_URL}/api/pedidos/datos/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${auth.user?.access_token}` }
       });
@@ -121,7 +121,7 @@ function App() {
 
   const guardarEdicion = async (id) => {
     try {
-      const respuesta = await fetch(`http://localhost:8080/api/datos/${id}`, {
+      const respuesta = await fetch(`${import.meta.env.VITE_API_URL}/api/pedidos/datos/${id}`, {
         method: "PUT",
         headers: { 
           "Content-Type": "application/json",
@@ -161,7 +161,7 @@ function App() {
           </div>
         </header>
 
-        {errorApi && <div className="alert-error">{errorApi}</div>}
+        {/*errorApi && <div className="alert-error">{errorApi}</div>*/}
 
         {/* Solo el rol solicitante puede crear peticiones */}
         {isSolicitante && !isAprobador && (
