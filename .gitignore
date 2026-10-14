@@ -10,3 +10,7 @@ crash.log
 .env
 .env.local
 credentials
+**/target/
+**/node_modules/
+**/.mvn/repository/
+.mvn-repository/
