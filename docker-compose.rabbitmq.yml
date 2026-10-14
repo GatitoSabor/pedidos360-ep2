@@ -1,0 +1,38 @@
+services:
+  rabbitmq-1:
+    image: rabbitmq:4.2-management
+    hostname: rabbitmq-1
+    environment:
+      RABBITMQ_ERLANG_COOKIE: pedidos360-cluster-cookie
+      RABBITMQ_NODENAME: rabbit@rabbitmq-1
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_1_data:/var/lib/rabbitmq
+      - ./infra/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  rabbitmq-2:
+    image: rabbitmq:4.2-management
+    hostname: rabbitmq-2
+    depends_on:
+      rabbitmq-1:
+        condition: service_healthy
+    environment:
+      RABBITMQ_ERLANG_COOKIE: pedidos360-cluster-cookie
+      RABBITMQ_NODENAME: rabbit@rabbitmq-2
+    ports:
+      - "5673:5672"
+      - "15673:15672"
+    volumes:
+      - rabbitmq_2_data:/var/lib/rabbitmq
+      - ./infra/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+
+volumes:
+  rabbitmq_1_data:
+  rabbitmq_2_data:
