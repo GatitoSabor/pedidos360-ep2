@@ -19,7 +19,7 @@ public class MessagingConfig {
     }
     @Bean SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory(ConnectionFactory connectionFactory, MessageConverter converter) {
         SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
-        factory.setConnectionFactory(connectionFactory); factory.setAcknowledgeMode(AcknowledgeMode.MANUAL); factory.setPrefetchCount(1); factory.setMessageConverter(converter);
+        factory.setConnectionFactory(connectionFactory); factory.setAcknowledgeMode(AcknowledgeMode.MANUAL); factory.setPrefetchCount(1); factory.setDefaultRequeueRejected(false); factory.setMessageConverter(converter);
         factory.setAdviceChain(RetryInterceptorBuilder.stateless().maxAttempts(3).backOffOptions(1000, 2.0, 4000).recoverer(new RejectAndDontRequeueRecoverer()).build());
         return factory;
     }
