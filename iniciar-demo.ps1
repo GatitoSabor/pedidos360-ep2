@@ -31,14 +31,18 @@ try {
 }
 
 $services = @(
-  @{ Name = 'backend'; Path = 'backend'; File = $backendMaven; Arguments = @('-Dspring-boot.run.profiles=messaging-demo', 'spring-boot:run') },
-  @{ Name = 'notificaciones'; Path = 'microservices\notificaciones-service'; File = $maven; Arguments = @('spring-boot:run') },
-  @{ Name = 'documentos'; Path = 'microservices\documentos-service'; File = $maven; Arguments = @('spring-boot:run') },
-  @{ Name = 'auditoria'; Path = 'microservices\auditoria-service'; File = $maven; Arguments = @('spring-boot:run') },
-  @{ Name = 'rabbit-admin'; Path = 'microservices\rabbitmq-admin-service'; File = $maven; Arguments = @('spring-boot:run') }
+  @{ Name = 'backend'; Port = 8080; Path = 'backend'; File = $backendMaven; Arguments = @('-Dspring-boot.run.profiles=messaging-demo', 'spring-boot:run') },
+  @{ Name = 'notificaciones'; Port = 8081; Path = 'microservices\notificaciones-service'; File = $maven; Arguments = @('spring-boot:run') },
+  @{ Name = 'documentos'; Port = 8082; Path = 'microservices\documentos-service'; File = $maven; Arguments = @('spring-boot:run') },
+  @{ Name = 'auditoria'; Port = 8083; Path = 'microservices\auditoria-service'; File = $maven; Arguments = @('spring-boot:run') },
+  @{ Name = 'rabbit-admin'; Port = 8084; Path = 'microservices\rabbitmq-admin-service'; File = $maven; Arguments = @('spring-boot:run') }
 )
 
 foreach ($service in $services) {
+  if (Get-NetTCPConnection -LocalPort $service.Port -State Listen -ErrorAction SilentlyContinue) {
+    Write-Host "$($service.Name) ya está disponible en el puerto $($service.Port)." -ForegroundColor Yellow
+    continue
+  }
   $servicePath = Join-Path $projectRoot $service.Path
   $outLog = Join-Path $logsPath "$($service.Name).out.log"
   $errLog = Join-Path $logsPath "$($service.Name).err.log"
