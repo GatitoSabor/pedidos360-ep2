@@ -4,6 +4,7 @@ import org.springframework.amqp.core.AcknowledgeMode;
 import org.springframework.amqp.rabbit.config.RetryInterceptorBuilder;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
+import org.springframework.amqp.rabbit.listener.ConditionalRejectingErrorHandler;
 import org.springframework.amqp.rabbit.retry.RejectAndDontRequeueRecoverer;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.amqp.support.converter.DefaultClassMapper;
@@ -19,7 +20,8 @@ public class MessagingConfig {
     }
     @Bean SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory(ConnectionFactory connectionFactory, MessageConverter converter) {
         SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
-        factory.setConnectionFactory(connectionFactory); factory.setAcknowledgeMode(AcknowledgeMode.MANUAL); factory.setPrefetchCount(1); factory.setDefaultRequeueRejected(false); factory.setMessageConverter(converter);
+        ConditionalRejectingErrorHandler errorHandler = new ConditionalRejectingErrorHandler(); errorHandler.setRejectManual(true);
+        factory.setConnectionFactory(connectionFactory); factory.setAcknowledgeMode(AcknowledgeMode.MANUAL); factory.setPrefetchCount(1); factory.setDefaultRequeueRejected(false); factory.setErrorHandler(errorHandler); factory.setMessageConverter(converter);
         factory.setAdviceChain(RetryInterceptorBuilder.stateless().maxAttempts(3).backOffOptions(1000, 2.0, 4000).recoverer(new RejectAndDontRequeueRecoverer()).build());
         return factory;
     }
