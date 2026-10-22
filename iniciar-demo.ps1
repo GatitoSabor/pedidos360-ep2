@@ -42,8 +42,9 @@ foreach ($service in $services) {
   $servicePath = Join-Path $projectRoot $service.Path
   $outLog = Join-Path $logsPath "$($service.Name).out.log"
   $errLog = Join-Path $logsPath "$($service.Name).err.log"
+  $commandLine = '"{0}" {1}' -f $service.File, ($service.Arguments -join ' ')
   Write-Host "Iniciando $($service.Name)..." -ForegroundColor Cyan
-  Start-Process -FilePath $service.File -ArgumentList $service.Arguments -WorkingDirectory $servicePath -WindowStyle Minimized -RedirectStandardOutput $outLog -RedirectStandardError $errLog
+  Start-Process -FilePath $env:ComSpec -ArgumentList @('/d', '/c', $commandLine) -WorkingDirectory $servicePath -WindowStyle Minimized -RedirectStandardOutput $outLog -RedirectStandardError $errLog
 }
 
 Write-Host ''
