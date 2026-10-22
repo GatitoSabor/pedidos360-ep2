@@ -6,9 +6,11 @@ import org.springframework.amqp.core.DirectExchange;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.QueueBuilder;
 import org.springframework.amqp.core.TopicExchange;
+import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.amqp.support.converter.DefaultClassMapper;
 import org.springframework.amqp.support.converter.MessageConverter;
+import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -47,6 +49,11 @@ public class RabbitTopologyConfig {
     @Bean Binding notificationDlxBinding() { return BindingBuilder.bind(notificationsDlq()).to(pedidosDlxExchange()).with(NOTIFICATIONS_DLQ); }
     @Bean Binding documentDlxBinding() { return BindingBuilder.bind(documentsDlq()).to(pedidosDlxExchange()).with(DOCUMENTS_DLQ); }
     @Bean Binding auditDlxBinding() { return BindingBuilder.bind(auditDlq()).to(pedidosDlxExchange()).with(AUDIT_DLQ); }
+
+    /** Declara la infraestructura antes de que los consumidores intenten suscribirse. */
+    @Bean ApplicationRunner initializeRabbitTopology(RabbitAdmin rabbitAdmin) {
+        return args -> rabbitAdmin.initialize();
+    }
 
     private Queue mainQueue(String queueName, String dlqName) {
         return QueueBuilder.durable(queueName)
