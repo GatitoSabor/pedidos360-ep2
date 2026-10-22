@@ -7,6 +7,7 @@ import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.QueueBuilder;
 import org.springframework.amqp.core.TopicExchange;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
+import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.amqp.support.converter.DefaultClassMapper;
 import org.springframework.amqp.support.converter.MessageConverter;
@@ -34,6 +35,10 @@ public class RabbitTopologyConfig {
         mapper.setIdClassMapping(java.util.Map.of("pedido.event", PedidoEvent.class));
         converter.setClassMapper(mapper);
         return converter;
+    }
+
+    @Bean RabbitAdmin rabbitAdmin(ConnectionFactory connectionFactory) {
+        return new RabbitAdmin(connectionFactory);
     }
 
     @Bean Queue notificationsQueue() { return mainQueue(NOTIFICATIONS_QUEUE, NOTIFICATIONS_DLQ); }
