@@ -1,6 +1,7 @@
 package com.pedidos360.notificaciones;
 
 import org.springframework.amqp.core.AcknowledgeMode;
+import org.springframework.amqp.AmqpRejectAndDontRequeueException;
 import org.springframework.amqp.rabbit.config.RetryInterceptorBuilder;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
@@ -22,7 +23,7 @@ public class MessagingConfig {
         SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
         ConditionalRejectingErrorHandler errorHandler = new ConditionalRejectingErrorHandler(); errorHandler.setRejectManual(true);
         factory.setConnectionFactory(connectionFactory); factory.setAcknowledgeMode(AcknowledgeMode.MANUAL); factory.setPrefetchCount(1); factory.setDefaultRequeueRejected(false); factory.setErrorHandler(errorHandler); factory.setMessageConverter(converter);
-        factory.setAdviceChain(RetryInterceptorBuilder.stateless().maxAttempts(3).backOffOptions(1000, 2.0, 4000).recoverer(new RejectAndDontRequeueRecoverer()).build());
+        factory.setAdviceChain(RetryInterceptorBuilder.stateless().maxAttempts(3).backOffOptions(1000, 2.0, 4000).recoverer((message, cause) -> { throw new AmqpRejectAndDontRequeueException("Retries exhausted", true, cause); }).build());
         return factory;
     }
 }
