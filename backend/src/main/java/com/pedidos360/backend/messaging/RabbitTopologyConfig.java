@@ -14,6 +14,7 @@ import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
 /** Único lugar donde se declaran nombres, exchanges, colas, DLQ y bindings. */
 @Configuration
@@ -56,7 +57,9 @@ public class RabbitTopologyConfig {
     @Bean Binding auditDlxBinding() { return BindingBuilder.bind(auditDlq()).to(pedidosDlxExchange()).with(AUDIT_DLQ); }
 
     /** Declara la infraestructura antes de que los consumidores intenten suscribirse. */
-    @Bean ApplicationRunner initializeRabbitTopology(RabbitAdmin rabbitAdmin) {
+    @Bean
+    @Profile("!test")
+    ApplicationRunner initializeRabbitTopology(RabbitAdmin rabbitAdmin) {
         return args -> rabbitAdmin.initialize();
     }
 

@@ -22,4 +22,7 @@ public class RabbitAdminService {
   public void createBinding(BindingRequest request) {
     rabbitAdmin.declareBinding(new Binding(request.queue(), Binding.DestinationType.QUEUE, request.exchange(), request.routingKey(), null));
   }
+  public void deleteBinding(BindingRequest request) {
+    rabbitAdmin.removeBinding(new Binding(request.queue(), Binding.DestinationType.QUEUE, request.exchange(), request.routingKey(), null));
+  }
 }

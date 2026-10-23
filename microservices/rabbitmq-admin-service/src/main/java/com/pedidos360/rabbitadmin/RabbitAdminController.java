@@ -22,4 +22,5 @@ public class RabbitAdminController {
   @PostMapping("/exchanges") ResponseEntity<Void> createExchange(@Valid @RequestBody ExchangeRequest request) { rabbitAdminService.createExchange(request); return ResponseEntity.status(HttpStatus.CREATED).build(); }
   @DeleteMapping("/exchanges/{name}") ResponseEntity<Void> deleteExchange(@PathVariable @Pattern(regexp = "^[a-z0-9][a-z0-9.-]{1,80}$") String name) { return rabbitAdminService.deleteExchange(name) ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build(); }
   @PostMapping("/bindings") ResponseEntity<Void> createBinding(@Valid @RequestBody BindingRequest request) { rabbitAdminService.createBinding(request); return ResponseEntity.status(HttpStatus.CREATED).build(); }
+  @DeleteMapping("/bindings") ResponseEntity<Void> deleteBinding(@Valid @RequestBody BindingRequest request) { rabbitAdminService.deleteBinding(request); return ResponseEntity.noContent().build(); }
 }

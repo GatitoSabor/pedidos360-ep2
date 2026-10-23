@@ -55,6 +55,8 @@ docker exec rabbitmq-1 rabbitmqctl cluster_status
 
 Para demostrar mensajería local sin depender de RDS, inicia `backend` con el perfil H2: `./mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=messaging-demo"`.
 
+Para el perfil que usa PostgreSQL, define `DB_PASSWORD` en el entorno antes de iniciar el backend. El repositorio incluye `.env.example` como referencia y no contiene la contraseña real.
+
 3. Iniciar `frontend` con `npm install` y `npm run dev`.
 
 Los usuarios de RabbitMQ Management son `guest/guest` en `http://localhost:15672` y `http://localhost:15673`.
@@ -69,6 +71,7 @@ DELETE /api/rabbitmq/queues/{name}
 POST   /api/rabbitmq/exchanges    { "name": "demo.events", "type": "topic", "durable": true }
 DELETE /api/rabbitmq/exchanges/{name}
 POST   /api/rabbitmq/bindings     { "queue": "demo.queue", "exchange": "demo.events", "routingKey": "pedido.*" }
+DELETE /api/rabbitmq/bindings     { "queue": "demo.queue", "exchange": "demo.events", "routingKey": "pedido.*" }
 ```
 
 ## Evidencias EP3
