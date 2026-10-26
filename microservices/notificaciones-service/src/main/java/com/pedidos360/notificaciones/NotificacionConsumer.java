@@ -10,10 +10,12 @@ import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Service;
 
 @Service
+/** Consume todos los eventos pedido.* y registra la notificación correspondiente. */
 public class NotificacionConsumer {
     private static final Logger log = LoggerFactory.getLogger(NotificacionConsumer.class);
 
     @RabbitListener(queues = "${messaging.queue}")
+    /** Confirma manualmente el mensaje o simula un fallo para probar reintentos y DLQ. */
     public void notify(PedidoEvent event, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long tag) throws IOException {
         if (event.descripcion().contains("[FALLAR]")) {
             log.warn("Fallo simulado para pedido {}; reintento con backoff", event.pedidoId());

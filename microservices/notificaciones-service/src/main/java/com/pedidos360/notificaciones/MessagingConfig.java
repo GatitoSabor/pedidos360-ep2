@@ -14,11 +14,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
+/** Define JSON, ACK manual, reintentos 1-2-4 segundos y envío final a DLQ. */
 public class MessagingConfig {
     @Bean MessageConverter jsonMessageConverter() {
         Jackson2JsonMessageConverter converter = new Jackson2JsonMessageConverter(); DefaultClassMapper mapper = new DefaultClassMapper();
         mapper.setIdClassMapping(java.util.Map.of("pedido.event", PedidoEvent.class)); converter.setClassMapper(mapper); return converter;
     }
+    /** Crea el contenedor de listeners con tres intentos antes de rechazar sin requeue. */
     @Bean SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory(ConnectionFactory connectionFactory, MessageConverter converter) {
         SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
         ConditionalRejectingErrorHandler errorHandler = new ConditionalRejectingErrorHandler(); errorHandler.setRejectManual(true);

@@ -3,10 +3,10 @@ resource "aws_security_group" "db_sg" {
   description = "Permitir trafico a PostgreSQL"
 
   ingress {
-    from_port   = 5432
-    to_port     = 5432
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"] 
+    from_port       = 5432
+    to_port         = 5432
+    protocol        = "tcp"
+    security_groups = [aws_security_group.ecs_sg.id]
   }
 
   egress {
@@ -24,9 +24,9 @@ resource "aws_db_instance" "postgres" {
   allocated_storage      = 20
   db_name                = "pedidos360db"
   username               = "admindb"
-  password               = "CloudNative2026!"
+  password               = var.db_password
   skip_final_snapshot    = true # Vital para que AWS Academy te deje borrarla después sin errores
-  publicly_accessible    = true
+  publicly_accessible    = false
   vpc_security_group_ids = [aws_security_group.db_sg.id]
 }
 

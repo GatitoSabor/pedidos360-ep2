@@ -18,7 +18,7 @@ resource "aws_cognito_user_pool" "pool" {
 }
 
 resource "aws_cognito_user_pool_domain" "hosted_ui" {
-  domain       = "pedidos360-williams-2" 
+  domain       = "pedidos360-williams-${data.aws_caller_identity.current.account_id}"
   user_pool_id = aws_cognito_user_pool.pool.id
 }
 
@@ -56,18 +56,18 @@ resource "aws_cognito_user_pool_client" "spa" {
   allowed_oauth_flows_user_pool_client = true
   allowed_oauth_flows                  = ["code"]
   supported_identity_providers         = ["COGNITO"]
-  
-  allowed_oauth_scopes                 = [
-    "openid", 
-    "email", 
-    "profile", 
-    "pedidos/api.read", 
-    "pedidos/api.write", 
-    "pedidos/api.update", 
+
+  allowed_oauth_scopes = [
+    "openid",
+    "email",
+    "profile",
+    "pedidos/api.read",
+    "pedidos/api.write",
+    "pedidos/api.update",
     "pedidos/api.delete"
   ]
 
-  callback_urls = ["http://localhost:4200/"]  
+  callback_urls = ["http://localhost:4200/"]
   logout_urls   = ["http://localhost:4200/"]
 
   explicit_auth_flows   = ["ALLOW_USER_PASSWORD_AUTH", "ALLOW_REFRESH_TOKEN_AUTH"]

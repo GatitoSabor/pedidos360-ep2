@@ -13,6 +13,10 @@ import java.util.Optional;
 @CrossOrigin(origins = {"http://localhost:3000", "http://localhost:4200", "http://localhost:5173"})
 @RestController
 @RequestMapping({"/api/datos", "/api/pedidos/datos"})
+/**
+ * Expone el CRUD de pedidos. Las operaciones que modifican información publican
+ * un evento solo después de que el pedido se guardó correctamente.
+ */
 public class DatosController {
 
     @Autowired
@@ -22,11 +26,13 @@ public class DatosController {
     private PedidoEventProducer pedidoEventProducer;
 
     @GetMapping
+    /** Devuelve todas las solicitudes disponibles para la vista React. */
     public List<Pedido> obtenerDatos() {
         return pedidoRepository.findAll();
     }
 
     @PostMapping
+    /** Crea un pedido pendiente y notifica su creación de forma asíncrona. */
     public Pedido crearPedido(@RequestBody Pedido pedido) {
         pedido.setEstado("PENDIENTE");
         Pedido guardado = pedidoRepository.save(pedido);
@@ -35,6 +41,7 @@ public class DatosController {
     }
     
     @PutMapping("/{id}")
+    /** Actualiza los datos editables de una solicitud existente. */
     public ResponseEntity<Pedido> actualizarPedido(@PathVariable Long id, @RequestBody Pedido detalles) {
         Optional<Pedido> pedidoExistente = pedidoRepository.findById(id);
         if (pedidoExistente.isPresent()) {
@@ -50,6 +57,7 @@ public class DatosController {
     }
 
     @PatchMapping("/{id}/revision")
+    /** Aprueba o rechaza el pedido y envía el evento que corresponde al estado final. */
     public ResponseEntity<Pedido> revisarPedido(@PathVariable Long id, @RequestBody Pedido revision) {
         Optional<Pedido> pedidoExistente = pedidoRepository.findById(id);
         if (pedidoExistente.isPresent()) {
@@ -68,6 +76,7 @@ public class DatosController {
     }
 
     @DeleteMapping("/{id}")
+    /** Elimina solo pedidos que existen; responde 404 para un identificador desconocido. */
     public ResponseEntity<Void> eliminarPedido(@PathVariable Long id) {
         if (pedidoRepository.existsById(id)) {
             pedidoRepository.deleteById(id);

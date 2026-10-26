@@ -5,16 +5,21 @@ import java.time.LocalDate;
 
 @Entity
 @Table(name = "pedidos")
+/** Entidad JPA que representa una solicitud gestionada por Pedidos360. */
 public class Pedido {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String descripcion; 
+    /** Motivo informado por la persona solicitante. */
+    private String descripcion;
+    /** Período solicitado para vacaciones o días administrativos. */
     private LocalDate fechaInicio;
     private LocalDate fechaTermino;
+    /** Estado de negocio: PENDIENTE, APROBADO o RECHAZADO. */
     private String estado = "PENDIENTE";
+    /** Observación opcional que agrega el aprobador al revisar la solicitud. */
     private String comentarioAprobador;
 
     public Pedido() {}

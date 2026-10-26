@@ -1,7 +1,7 @@
 variable "backend_url" {
   type        = string
   description = "URL publica de la tarea ECS Fargate"
-  default     = "http://44.195.79.115:8080" 
+  default     = "http://44.204.237.154:8080"
 }
 
 resource "aws_apigatewayv2_api" "api_pedidos" {
@@ -9,7 +9,7 @@ resource "aws_apigatewayv2_api" "api_pedidos" {
   protocol_type = "HTTP"
 
   cors_configuration {
-    allow_origins = ["http://localhost:4200", "http://localhost:5173", "http://localhost:3000"]  
+    allow_origins = ["http://localhost:4200", "http://localhost:5173", "http://localhost:3000"]
     allow_methods = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
     allow_headers = ["Content-Type", "Authorization"]
     max_age       = 300
@@ -23,16 +23,17 @@ resource "aws_apigatewayv2_authorizer" "jwt_auth" {
   name             = "cognito-authorizer"
 
   jwt_configuration {
-    issuer   = "https://cognito-idp.us-east-1.amazonaws.com/${aws_cognito_user_pool.pool.id}"
+    audience = [aws_cognito_user_pool_client.spa.id]
+    issuer = "https://cognito-idp.us-east-1.amazonaws.com/${aws_cognito_user_pool.pool.id}"
   }
 }
 
 resource "aws_apigatewayv2_integration" "backend_ecs" {
-  api_id                 = aws_apigatewayv2_api.api_pedidos.id
-  integration_type       = "HTTP_PROXY"
-  integration_method     = "ANY"
+  api_id             = aws_apigatewayv2_api.api_pedidos.id
+  integration_type   = "HTTP_PROXY"
+  integration_method = "ANY"
   # Esta línea asegura que la ruta llegue intacta al backend
-  integration_uri        = "${var.backend_url}/api/pedidos/{proxy}" 
+  integration_uri        = "${var.backend_url}/api/pedidos/{proxy}"
   payload_format_version = "1.0"
 }
 

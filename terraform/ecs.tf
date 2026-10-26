@@ -1,3 +1,21 @@
+data "aws_caller_identity" "current" {}
+
+data "aws_vpc" "default" {
+  default = true
+}
+
+data "aws_subnets" "default" {
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.default.id]
+  }
+}
+
+resource "aws_ecr_repository" "backend" {
+  name         = "pedidos360-backend"
+  force_delete = true
+}
+
 resource "aws_ecs_cluster" "main" {
   name = "pedidos360-cluster"
 }
@@ -34,14 +52,13 @@ resource "aws_ecs_task_definition" "backend" {
   requires_compatibilities = ["FARGATE"]
   cpu                      = "256"
   memory                   = "512"
-  execution_role_arn       = "arn:aws:iam::321479310670:role/LabRole"
-  task_role_arn            = "arn:aws:iam::321479310670:role/LabRole"
+  execution_role_arn       = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/LabRole"
+  task_role_arn            = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/LabRole"
 
   container_definitions = jsonencode([
     {
       name      = "backend"
-      # 2. Apuntamos a tu imagen real, no a Nginx
-      image     = "321479310670.dkr.ecr.us-east-1.amazonaws.com/pedidos360-backend:latest"
+      image     = "${aws_ecr_repository.backend.repository_url}:latest"
       essential = true
       portMappings = [
         {
@@ -54,7 +71,7 @@ resource "aws_ecs_task_definition" "backend" {
         { name = "SPRING_DATASOURCE_USERNAME", value = var.db_username },
         { name = "SPRING_DATASOURCE_PASSWORD", value = var.db_password }
       ]
-      
+
       # NUEVO: Configuración para enviar los logs a CloudWatch
       logConfiguration = {
         logDriver = "awslogs"
@@ -76,9 +93,9 @@ resource "aws_ecs_service" "backend" {
   launch_type     = "FARGATE"
 
   network_configuration {
-    subnets          = ["subnet-0db4b7648d72b071a"]
+    subnets          = data.aws_subnets.default.ids
     assign_public_ip = true
     # 3. Asignamos el Security Group correcto
-    security_groups  = [aws_security_group.ecs_sg.id]
+    security_groups = [aws_security_group.ecs_sg.id]
   }
 }

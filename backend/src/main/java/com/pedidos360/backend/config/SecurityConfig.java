@@ -2,6 +2,7 @@ package com.pedidos360.backend.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -15,9 +16,16 @@ import java.util.List;
 
 @Configuration
 @EnableMethodSecurity(prePostEnabled = true)
+@Profile("!messaging-demo")
+/**
+ * Seguridad del perfil normal. Todas las rutas requieren JWT de Cognito; el
+ * perfil local de mensajería usa una configuración distinta para no depender
+ * de servicios cloud durante la demostración.
+ */
 public class SecurityConfig {
 
     @Bean
+    /** Configura CORS, deshabilita CSRF para API REST y valida JWT entrantes. */
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .cors(Customizer.withDefaults())
@@ -33,11 +41,13 @@ public class SecurityConfig {
     }
 
     @Bean
+    /** Mantiene la conversión de JWT en un bean reutilizable por Spring Security. */
     public JwtAuthenticationConverter jwtAuthenticationConverter() {
         return new JwtAuthenticationConverter();
     }
 
     @Bean
+    /** Declara los orígenes, verbos y encabezados permitidos para el cliente web. */
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of("http://localhost:4200"));

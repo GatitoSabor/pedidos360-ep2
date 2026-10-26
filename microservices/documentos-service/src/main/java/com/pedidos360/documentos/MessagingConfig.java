@@ -11,6 +11,7 @@ import org.springframework.amqp.support.converter.DefaultClassMapper;
 import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+/** Define JSON, ACK manual, reintentos y el envío de fallos persistentes a la DLQ. */
 @Configuration public class MessagingConfig {
   @Bean MessageConverter jsonMessageConverter() { Jackson2JsonMessageConverter converter = new Jackson2JsonMessageConverter(); DefaultClassMapper mapper = new DefaultClassMapper(); mapper.setIdClassMapping(java.util.Map.of("pedido.event", PedidoEvent.class)); converter.setClassMapper(mapper); return converter; }
   @Bean SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory(ConnectionFactory connectionFactory, MessageConverter converter) {

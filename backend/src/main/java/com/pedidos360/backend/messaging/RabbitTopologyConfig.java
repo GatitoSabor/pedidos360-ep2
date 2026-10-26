@@ -16,7 +16,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
-/** Único lugar donde se declaran nombres, exchanges, colas, DLQ y bindings. */
+/**
+ * Fuente única de la topología RabbitMQ. Declara infraestructura durable,
+ * rutas de eventos de negocio y rutas de recuperación hacia cada DLQ.
+ */
 @Configuration
 public class RabbitTopologyConfig {
     public static final String EVENTS_EXCHANGE = "pedidos.events";
@@ -28,7 +31,9 @@ public class RabbitTopologyConfig {
     public static final String DOCUMENTS_DLQ = "documentos.dlq";
     public static final String AUDIT_DLQ = "auditoria.dlq";
 
+    /** Exchange topic que enruta eventos según claves como pedido.aprobado. */
     @Bean TopicExchange pedidosEventsExchange() { return new TopicExchange(EVENTS_EXCHANGE, true, false); }
+    /** Exchange direct que entrega mensajes rechazados en la DLQ correspondiente. */
     @Bean DirectExchange pedidosDlxExchange() { return new DirectExchange(DLX_EXCHANGE, true, false); }
     @Bean MessageConverter jsonMessageConverter() {
         Jackson2JsonMessageConverter converter = new Jackson2JsonMessageConverter();
@@ -63,6 +68,7 @@ public class RabbitTopologyConfig {
         return args -> rabbitAdmin.initialize();
     }
 
+    /** Crea una cola principal durable con la ruta de dead-letter configurada. */
     private Queue mainQueue(String queueName, String dlqName) {
         return QueueBuilder.durable(queueName)
                 .deadLetterExchange(DLX_EXCHANGE)

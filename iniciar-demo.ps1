@@ -9,6 +9,28 @@ $projectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $logsPath = Join-Path $projectRoot '.runtime-logs'
 $cloudNativeRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $projectRoot))
 
+# Algunos entornos integrados propagan TEMP/TMP como '/tmp'. Java en Windows usa
+# estas variables para los canales internos de NIO; una ruta Unix hace que Tomcat
+# falle antes de abrir el puerto HTTP. Se normalizan solo para los procesos de demo.
+if ($env:TEMP -like '/*' -or $env:TMP -like '/*') {
+  $windowsTemp = Join-Path $env:LOCALAPPDATA 'Temp'
+  $env:TEMP = $windowsTemp
+  $env:TMP = $windowsTemp
+  Write-Host "TEMP/TMP normalizados para Java: $windowsTemp" -ForegroundColor Yellow
+}
+
+# JDK 17.0.12 puede seleccionar WEPollSelector en algunos equipos Windows. Ese
+# proveedor abre un socket de dominio Unix interno y falla con "Invalid argument:
+# connect" antes de que Tomcat escuche en el puerto. Forzamos el proveedor NIO
+# clásico de Windows únicamente en los procesos locales que lanza esta demo.
+$selectorProvider = '-Djava.nio.channels.spi.SelectorProvider=sun.nio.ch.WindowsSelectorProvider'
+if ([string]::IsNullOrWhiteSpace($env:JAVA_TOOL_OPTIONS)) {
+  $env:JAVA_TOOL_OPTIONS = $selectorProvider
+} elseif ($env:JAVA_TOOL_OPTIONS -notmatch 'SelectorProvider') {
+  $env:JAVA_TOOL_OPTIONS = "$($env:JAVA_TOOL_OPTIONS) $selectorProvider"
+}
+Write-Host 'Compatibilidad NIO de Windows aplicada para los servicios Java.' -ForegroundColor Yellow
+
 $mavenCandidates = @(
   (Get-Command mvn -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source -ErrorAction SilentlyContinue),
   (Join-Path $cloudNativeRoot 'Actividad-2.2.3-DLQ\.tools\apache-maven-3.10.0\bin\mvn.cmd')

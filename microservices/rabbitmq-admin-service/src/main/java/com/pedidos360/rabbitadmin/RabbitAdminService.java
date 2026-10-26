@@ -9,6 +9,7 @@ import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.stereotype.Service;
 
 @Service
+/** Encapsula las operaciones RabbitAdmin para no exponer detalles AMQP al controlador REST. */
 public class RabbitAdminService {
   private final RabbitAdmin rabbitAdmin;
   public RabbitAdminService(RabbitAdmin rabbitAdmin) { this.rabbitAdmin = rabbitAdmin; }
@@ -22,6 +23,7 @@ public class RabbitAdminService {
   public void createBinding(BindingRequest request) {
     rabbitAdmin.declareBinding(new Binding(request.queue(), Binding.DestinationType.QUEUE, request.exchange(), request.routingKey(), null));
   }
+  /** Quita exactamente el vínculo identificado por cola, exchange y routing key. */
   public void deleteBinding(BindingRequest request) {
     rabbitAdmin.removeBinding(new Binding(request.queue(), Binding.DestinationType.QUEUE, request.exchange(), request.routingKey(), null));
   }
